@@ -3,9 +3,32 @@
 <head>
 	<meta charset="UTF-8">
 	<title>MutationObserver</title>
+	<style>
+	span.checkbox{
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+		background: url('checkbox.png') left bottom;
+	}
+
+	span.checkbox.checked{
+		background-position: left top;
+	}
+
+	span.checkbox.disabled{
+		background-position: left center;
+	}
+	</style>
 </head>
 <body>
-	<input type="text" name="test" id="test" value="true" />
+	<input type="checkbox" name="test1" id="test1" value="true" />
+	<br />
+	<input type="checkbox" name="test2" id="test2" value="true" checked="checked" />
+	<br />
+	<input type="checkbox" name="test3" id="test3" value="true" disabled="disabled" />
+	<br />
+	<input type="checkbox" name="test3" id="test3" value="true" checked="checked" disabled="disabled" />
 	
 	<script src="http://codeorigin.jquery.com/jquery-1.10.2.js"></script>
 	<!--[if gte IE 7]>
@@ -13,21 +36,61 @@
 	<script src="MutationObserver.js"></script>
 	<![endif]-->
 	<script>
-		// select the target node
-		var target = document.querySelector('#test');
-		 
-		// create an observer instance
 		var observer = new MutationObserver(function(mutations) {
 			mutations.forEach(function(mutation) {
-				console.log(mutation);
+				if(mutation.attributeName === 'disabled'){
+					var checkbox = $(mutation.target).next('.checkbox');
+					if(mutation.oldValue === null){
+						checkbox.addClass('disabled');
+					}else{
+						checkbox.removeClass('disabled');
+					}
+				}else if(mutation.attributeName === 'checked'){
+					var checkbox = $(mutation.target).next('.checkbox');
+					if(mutation.oldValue === null){
+						checkbox.addClass('checked');
+					}else{
+						checkbox.removeClass('checked');
+					}
+				}
 			});    
 		});
 		 
-		// configuration of the observer:
-		var config = { attributes: true, childList: true, characterData: true };
-		 
-		// pass in the target node, as well as the observer options
-		observer.observe(target, config);
+		observerConfig = { attributes: true, childList: true, characterData: true, subtree: true, attributeOldValue: true, characterDataOldValue: true };
+
+		$('input:checkbox').each(function(index, object){
+			var rand = Math.floor((Math.random()*10000)+1);;
+
+			$(object).attr('rel',rand).hide().after('<span class="checkbox" id="'+rand+'">&nbsp;</span>');
+			var checkbox = $(object).next('.checkbox');
+
+			if($(object).prop('disabled')){
+				$(checkbox).addClass('disabled');
+			}
+			
+			if($(object).prop('checked')){
+				$(checkbox).addClass('checked');
+			}else{
+				$(checkbox).removeClass('checked');
+			}
+
+			$(checkbox).off().on('click', function(e){
+				e.preventDefault();
+
+				if(!$(this).hasClass('disabled')){
+					if($(this).hasClass('checked')){
+						$(this).removeClass('checked');
+						$(object).removeAttr('checked');
+					}else{
+						$(this).addClass('checked');
+						$(object).attr('checked','checked');
+					}
+				}
+			});
+
+			observer.observe(object, observerConfig);
+		});
+
 	</script>
 </body>
 </html>
